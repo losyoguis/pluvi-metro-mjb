@@ -306,6 +306,23 @@ function render() {
   drawTrend();
   drawMonthly();
 }
+
+function normalizeHour(v){
+  const s = String(v || '').trim();
+  const isoTime = s.match(/T(\d{2}):(\d{2})/);
+  if (isoTime) return `${isoTime[1]}:${isoTime[2]}`;
+  const longTime = s.match(/\b(\d{1,2}):(\d{2})(?::\d{2})?\b/);
+  if (longTime) return `${String(longTime[1]).padStart(2,'0')}:${longTime[2]}`;
+  const numeric = Number(s);
+  if (!isNaN(numeric) && numeric >= 0 && numeric < 1) {
+    const totalMinutes = Math.round(numeric * 24 * 60);
+    const hh = Math.floor(totalMinutes / 60) % 24;
+    const mm = totalMinutes % 60;
+    return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  }
+  return s;
+}
+
 function groupBy(arr, fn) { return arr.reduce((a,x)=>{const k=fn(x); (a[k] ||= []).push(x); return a;},{}); }
 function sum(arr) { return arr.reduce((a,b)=>a+n(b.Precipitacion_mm),0); }
 function axes(ctx,w,h,pad,maxY) {
@@ -323,7 +340,7 @@ function drawCompare(){
   const bw=groupBy(r,x=>String(x.SemanaISO||"")), weeks=Object.keys(bw).sort((a,b)=>Number(a)-Number(b));
   const bm=groupBy(r,x=>String(x.MesClave||"")), months=Object.keys(bm).sort();
   const by=groupBy(r,x=>String(x.Ano||"")), years=Object.keys(by).sort();
-  const vals=[sum(bd[dates.at(-1)]||[]),sum(bd[dates.at(-2)]||[]),sum(bw[weeks.at(-1)]||[]),sum(bw[weeks.at(-2)]||[]),sum(bm[months.at(-1)]||[]),sum(bm[months.at(-2)]||[]),sum(by[years.at(-1)]||[]),sum(by[years.at(-2)]||[])];
+  const vals=[sum(bd[dates[dates.length-1]]||[]),sum(bd[dates[dates.length-2]]||[]),sum(bw[weeks[weeks.length-1]]||[]),sum(bw[weeks[weeks.length-2]]||[]),sum(bm[months[months.length-1]]||[]),sum(bm[months[months.length-2]]||[]),sum(by[years[years.length-1]]||[]),sum(by[years[years.length-2]]||[])];
   const labels=["Día","Prev.","Semana","Prev.","Mes","Prev.","Año","Prev."];
   const maxY=Math.max(10,...vals); axes(ctx,w,h,pad,maxY); if(!vals.some(v=>v>0)) return empty(ctx,w,h,"Sin datos comparativos");
   const inner=w-pad.l-pad.r,bwBar=Math.min(54,inner/vals.length*.62),ih=h-pad.t-pad.b;
