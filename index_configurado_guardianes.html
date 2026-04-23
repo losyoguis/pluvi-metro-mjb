@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardianes Climáticos MJB | Dashboard pluvial</title>
+  <meta name="theme-color" content="#006636">
+  <style>
+    :root{
+      --green:#006636; --green-deep:#0d2416; --red:#9b0000; --gold:#d4af37; --gold-soft:#efe1a6;
+      --paper:#f6f0de; --ink:#f7f8f3; --muted:#d8d7cb; --card:rgba(16,27,20,.82);
+      --line:rgba(246,240,222,.12); --shadow:0 18px 45px rgba(0,0,0,.28);
+      --ok:#7ddf8a; --warn:#ffd56a; --danger:#ff8787; --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--ink);
+      background:
+      radial-gradient(circle at 12% 10%, rgba(212,175,55,.17), transparent 22%),
+      radial-gradient(circle at 90% 14%, rgba(155,0,0,.18), transparent 24%),
+      linear-gradient(145deg, #07110b, #12301c 55%, #07110b);}
+    body{overflow-x:hidden}
+    #rainLayer .drop{position:fixed;top:-24px;width:2px;height:18px;background:linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,.75));animation:fall linear infinite;opacity:.22;pointer-events:none}
+    @keyframes fall{to{transform:translateY(110vh)}}
+    .container{width:min(1320px,94vw);margin:0 auto;padding:26px 0 44px}
+    .hero{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:30px;box-shadow:var(--shadow);padding:28px;background:
+      linear-gradient(160deg, rgba(246,240,222,.07), rgba(246,240,222,.02)),
+      linear-gradient(130deg, rgba(0,102,54,.22), rgba(155,0,0,.18))}
+    .hero:before{content:"";position:absolute;right:-70px;bottom:-90px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle, rgba(212,175,55,.28), transparent 70%)}
+    .hero-grid{display:grid;grid-template-columns:1.35fr .75fr;gap:22px;align-items:end}
+    .brand-row{display:flex;gap:16px;align-items:center}
+    .logo-box{width:96px;height:116px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:rgba(246,240,222,.08);border:1px solid var(--line);padding:8px}
+    .logo-box img{max-width:100%;max-height:100%;display:block}
+    .eyebrow{display:inline-flex;gap:10px;align-items:center;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(246,240,222,.05);color:var(--gold-soft);font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:.72rem}
+    h1{margin:14px 0 10px;font-size:clamp(1.85rem,3vw,3.2rem);line-height:1.05}
+    .hero p{margin:0;color:var(--muted);max-width:860px;font-size:1.03rem}
+    .hero-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
+    .metric,.status-card,.panel,.chart-wrap,.map-wrap,.table-wrap,.config-card{border:1px solid var(--line);border-radius:20px;background:var(--card);backdrop-filter:blur(8px);box-shadow:var(--shadow)}
+    .metric{padding:16px;min-height:116px}
+    .metric .label,.small-card .k,.status-card .label,.config-card .label{font-size:.88rem;color:var(--gold-soft);margin-bottom:8px}
+    .metric .value,.small-card .v{font-size:1.95rem;font-weight:800}
+    .metric .sub,.footer-note,.help-text{margin-top:6px;color:var(--muted);font-size:.87rem}
+    .status{display:grid;gap:12px}
+    .status-card{padding:16px}
+    .meter{margin-top:10px;height:16px;border-radius:999px;background:rgba(246,240,222,.07);overflow:hidden;border:1px solid var(--line)}
+    .meter>div{height:100%;width:0;background:linear-gradient(90deg,var(--ok),var(--warn),var(--danger));transition:width .25s ease}
+    .pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .pill{padding:8px 12px;border-radius:999px;font-weight:700;font-size:.84rem;border:1px solid var(--line);background:rgba(246,240,222,.05)}
+    .pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)} .pill.danger{color:var(--danger)}
+    .main{display:grid;grid-template-columns:370px 1fr;gap:22px;margin-top:24px}
+    .panel{padding:20px} h2,h3{margin:0 0 12px}
+    .stack{display:grid;gap:12px}
+    label{display:block;margin:2px 0 7px;color:var(--paper);font-weight:700;font-size:.93rem}
+    select,input,button,a.btn{width:100%;background:rgba(246,240,222,.06);color:var(--ink);border:1px solid rgba(246,240,222,.11);border-radius:14px;padding:13px 14px;outline:none;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-weight:800}
+    input::placeholder{color:#d8d7cb}
+    select:focus,input:focus{border-color:rgba(212,175,55,.7);box-shadow:0 0 0 3px rgba(212,175,55,.12)}
+    .buttons{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+    button,.btn{cursor:pointer;transition:.18s transform,.18s opacity,.18s background}
+    button:hover,.btn:hover{transform:translateY(-1px)}
+    .primary{background:linear-gradient(135deg,var(--green), #1f7a49)}
+    .secondary{background:linear-gradient(135deg,var(--red), #7b0909)}
+    .ghost{background:rgba(246,240,222,.07)}
+    .config-card{padding:16px}
+    .legend{display:grid;gap:10px;margin-top:12px;color:var(--muted);font-size:.91rem}
+    .legend span{display:inline-flex;align-items:center;gap:8px}
+    .dot{width:12px;height:12px;border-radius:50%}
+    .g1{background:var(--ok)} .g2{background:var(--warn)} .g3{background:var(--danger)}
+    .dashboard{display:grid;gap:22px}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .small-card{padding:16px;border:1px solid var(--line);border-radius:18px;background:rgba(246,240,222,.035)}
+    .charts{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .chart-wrap,.map-wrap,.table-wrap{padding:14px}
+    .chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px}
+    .mini{padding:8px 10px;border-radius:999px;background:rgba(246,240,222,.05);border:1px solid var(--line);color:var(--muted);font-size:.81rem}
+    canvas{width:100%;display:block}
+    #trendChart{height:320px} #monthChart,#compareChart,#sedeChart{height:300px}
+    .map-box{position:relative;height:350px;border-radius:18px;overflow:hidden;background:
+      radial-gradient(circle at 28% 42%, rgba(212,175,55,.12), transparent 22%),
+      linear-gradient(180deg, #102315, #08110b)}
+    .map-shape{position:absolute;left:16%;top:15%;width:68%;height:70%;background:rgba(0,102,54,.17);border:2px dashed rgba(212,175,55,.42);border-radius:44% 56% 48% 52%/45% 44% 56% 55%;transform:rotate(-10deg)}
+    .marker{position:absolute;display:flex;flex-direction:column;align-items:center;gap:5px;transform:translate(-50%,-100%)}
+    .pin{width:18px;height:18px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 9px rgba(212,175,55,.14)}
+    .marker span{white-space:nowrap;background:rgba(7,17,11,.92);border:1px solid var(--line);padding:6px 8px;border-radius:10px;font-size:.8rem}
+    table{width:100%;border-collapse:collapse}
+    thead{background:rgba(246,240,222,.06)}
+    th,td{padding:12px 14px;text-align:left;border-bottom:1px solid rgba(246,240,222,.06);font-size:.92rem}
+    th{color:var(--gold-soft)}
+    tbody tr:hover{background:rgba(246,240,222,.03)}
+    .tag{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-weight:800;font-size:.82rem}
+    .tag.ligera{background:rgba(125,223,138,.14);color:var(--ok)}
+    .tag.moderada{background:rgba(255,213,106,.14);color:var(--warn)}
+    .tag.fuerte{background:rgba(255,135,135,.14);color:var(--danger)}
+    .loader{padding:36px;text-align:center;color:var(--muted)}
+    .notice{padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:rgba(246,240,222,.05);color:var(--muted)}
+    .notice strong{color:var(--paper)}
+    .badge-inline{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;background:rgba(212,175,55,.14);border:1px solid rgba(212,175,55,.28);color:var(--gold-soft);font-size:.82rem}
+    @media (max-width:1120px){.hero-grid,.main,.charts,.grid-2{grid-template-columns:1fr}.hero-metrics,.cards{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:760px){.hero-metrics,.cards{grid-template-columns:1fr}.brand-row{align-items:flex-start}.logo-box{width:76px;height:92px}th:nth-child(6),td:nth-child(6){display:none}}
+  </style>
+</head>
+<body>
+  <div id="rainLayer"></div>
+  <div class="container">
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <div class="brand-row">
+            <div class="logo-box"><img src="assets/escudomjb.png" alt="Escudo MJB"></div>
+            <div>
+              <span class="eyebrow">Institución Educativa Manuel J. Betancur</span>
+              <h1>Dashboard pluvial comparativo</h1>
+            </div>
+          </div>
+          <p>Panel estático para GitHub Pages conectado a Google Apps Script. Compara registros por sede, día, semana, mes y año, con identidad visual institucional.</p>
+          <div class="hero-metrics">
+            <div class="metric"><div class="label">Lluvia de hoy</div><div class="value" id="todayRain">0.0 mm</div><div class="sub" id="todayDateText">Sin datos aún</div></div>
+            <div class="metric"><div class="label">Acumulado histórico</div><div class="value" id="totalRainHero">0.0 mm</div><div class="sub">Suma del histórico filtrado</div></div>
+            <div class="metric"><div class="label">Promedio por registro</div><div class="value" id="avgRainHero">0.0 mm</div><div class="sub">Promedio del conjunto seleccionado</div></div>
+          </div>
+        </div>
+        <div class="status">
+          <div class="status-card">
+            <div class="label">Intensidad actual</div>
+            <div class="value" id="intensityNow">Sin dato</div>
+            <div class="meter"><div id="intensityBar"></div></div>
+            <div class="pills">
+              <span class="pill ok">0–5 mm · Ligera</span>
+              <span class="pill warn">5.1–20 mm · Moderada</span>
+              <span class="pill danger">&gt;20 mm · Fuerte</span>
+            </div>
+          </div>
+          <div class="status-card">
+            <div class="label">Contexto</div>
+            <div class="help-text">Backend configurado automáticamente con tu Web App de Apps Script.</div>
+            <div style="margin-top:10px" class="badge-inline">Sedes: Manuel J. Betancur y Gustavo Rodas Isaza</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="main">
+      <aside class="panel">
+        <h2>Filtros y acciones</h2>
+        <div class="stack">
+          <div>
+            <label for="sedeSelect">Sede principal</label>
+            <select id="sedeSelect"></select>
+          </div>
+          <div>
+            <label for="sedeCompareSelect">Sede para comparar</label>
+            <select id="sedeCompareSelect"></select>
+          </div>
+          <div class="buttons">
+            <button class="primary" id="refreshBtn">Actualizar panel</button>
+            <a class="btn secondary" id="formBtn" target="_blank" rel="noopener">Abrir Google Form</a>
+            <a class="btn ghost" id="xlsxBtn" target="_blank" rel="noopener">Exportar Excel</a>
+            <a class="btn ghost" id="pdfBtn" target="_blank" rel="noopener">Exportar PDF</a>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span><i class="dot g1"></i> Ligera: seguimiento básico</span>
+          <span><i class="dot g2"></i> Moderada: revisar acumulados y diferencia entre sedes</span>
+          <span><i class="dot g3"></i> Fuerte: activar alerta pedagógica o preventiva</span>
+        </div>
+
+        <div class="config-card" style="margin-top:16px">
+          <div class="label">Backend Apps Script</div>
+          <input id="apiUrlInput" value="https://script.google.com/macros/s/AKfycbyjEqwBsnoAG9ifNqryuyXykAlL0dxaPleVUGiqPbQfhMEu3aoqXZJaPX2sJEBS-DQ/exec" placeholder="URL del backend Apps Script">
+          <div class="buttons">
+            <button class="primary" id="saveApiBtn">Guardar URL del backend</button>
+            <button class="ghost" id="testApiBtn">Probar conexión</button>
+          </div>
+          <div class="help-text">Este sitio corre en GitHub Pages y consume el backend por JSONP.</div>
+        </div>
+
+        <div class="notice" style="margin-top:16px">
+          <strong>Estado:</strong> <span id="statusText">Cargando configuración del backend…</span>
+        </div>
+      </aside>
+
+      <div class="dashboard">
+        <div class="cards" id="kpiCards"></div>
+
+        <div class="grid-2">
+          <div class="chart-wrap">
+            <div class="chart-head"><h3>Comparativos de periodos</h3><div class="mini">Día, semana, mes y año</div></div>
+            <canvas id="compareChart" width="700" height="300"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-head"><h3>Comparativo entre sedes</h3><div class="mini">Acumulado por sede</div></div>
+            <canvas id="sedeChart" width="700" height="300"></canvas>
+          </div>
+        </div>
+
+        <div class="charts">
+          <div class="chart-wrap">
+            <div class="chart-head"><h3>Tendencia reciente</h3><div class="mini">Últimos registros filtrados</div></div>
+            <canvas id="trendChart" width="900" height="320"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-head"><h3>Distribución mensual</h3><div class="mini">Acumulado por mes</div></div>
+            <canvas id="monthChart" width="500" height="320"></canvas>
+          </div>
+        </div>
+
+        <div class="map-wrap">
+          <div class="chart-head"><h3>Mapa contextual de San Antonio de Prado</h3><div class="mini">Ubicación referencial de las sedes</div></div>
+          <div class="map-box">
+            <div class="map-shape"></div>
+            <div class="marker" style="left:58%;top:34%"><div class="pin"></div><span>Manuel J. Betancur</span></div>
+            <div class="marker" style="left:43%;top:62%"><div class="pin"></div><span>Gustavo Rodas Isaza</span></div>
+          </div>
+          <div class="footer-note">Mapa esquemático de referencia territorial del corregimiento de San Antonio de Prado.</div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Sede</th>
+                <th>Hora</th>
+                <th>Precipitación</th>
+                <th>Intensidad</th>
+                <th>Observador</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="6" class="loader">Cargando datos…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const BRAND = {green:'#006636', red:'#9b0000', gold:'#d4af37', ink:'#f6f0de', muted:'#d8d7cb', ok:'#7ddf8a', warn:'#ffd56a', danger:'#ff8787'};
+    const state = {
+      apiUrl: 'https://script.google.com/macros/s/AKfycbyjEqwBsnoAG9ifNqryuyXykAlL0dxaPleVUGiqPbQfhMEu3aoqXZJaPX2sJEBS-DQ/exec',
+      bootstrap:null,
+      sede:'TODAS',
+      sedeComparar:'TODAS'
+    };
+    const $ = id => document.getElementById(id);
+
+    function createRain(){
+      const layer = $('rainLayer');
+      for(let i=0;i<78;i++){
+        const d = document.createElement('span');
+        d.className = 'drop';
+        d.style.left = Math.random()*100 + 'vw';
+        d.style.height = (10 + Math.random()*18) + 'px';
+        d.style.animationDuration = (0.85 + Math.random()*1.8) + 's';
+        d.style.animationDelay = (Math.random()*2.2) + 's';
+        d.style.opacity = (0.08 + Math.random()*0.25).toFixed(2);
+        layer.appendChild(d);
+      }
+    }
+
+    function setStatus(text){ $('statusText').textContent = text; }
+    function normalizeApiUrl(url){ return String(url || '').trim().replace(/[?&]$/, ''); }
+    function saveApiUrl(url){ localStorage.setItem('pluv_api_url', normalizeApiUrl(url)); }
+    function getSavedApiUrl(){ return normalizeApiUrl(localStorage.getItem('pluv_api_url') || state.apiUrl); }
+
+    function jsonp(url){
+      return new Promise((resolve, reject) => {
+        const callback = '__pluv_cb_' + Math.random().toString(36).slice(2);
+        const script = document.createElement('script');
+        const cleanup = () => {
+          delete window[callback];
+          if(script.parentNode) script.parentNode.removeChild(script);
+        };
+        window[callback] = data => { cleanup(); resolve(data); };
+        script.onerror = () => { cleanup(); reject(new Error('No fue posible conectar con el backend')); };
+        script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + callback + '&_=' + Date.now();
+        document.body.appendChild(script);
+      });
+    }
+
+    async function loadBootstrap(){
+      state.apiUrl = normalizeApiUrl($('apiUrlInput').value || state.apiUrl);
+      if(!state.apiUrl){
+        setStatus('Pega la URL del backend Apps Script.');
+        return;
+      }
+      setStatus('Conectando con el backend...');
+      try{
+        const sedeParam = state.sede !== 'TODAS' ? '&sede=' + encodeURIComponent(state.sede) : '';
+        const data = await jsonp(state.apiUrl + '?action=bootstrap' + sedeParam);
+        state.bootstrap = data;
+        hydrateSelectors();
+        hydrateActions();
+        renderAll();
+        setStatus('Conexión exitosa. Panel actualizado correctamente.');
+      }catch(err){
+        console.error(err);
+        $('tableBody').innerHTML = '<tr><td colspan="6" class="loader">No fue posible cargar la información del backend.</td></tr>';
+        setStatus('No se pudo leer el backend. Verifica la URL de la Web App.');
+      }
+    }
+
+    function hydrateSelectors(){
+      const sedes = ['TODAS','Manuel J. Betancur','Gustavo Rodas Isaza'];
+      const options = sedes.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+      $('sedeSelect').innerHTML = options;
+      $('sedeCompareSelect').innerHTML = options;
+      $('sedeSelect').value = state.sede;
+      $('sedeCompareSelect').value = state.sedeComparar;
+    }
+
+    function hydrateActions(){
+      const cfg = (state.bootstrap && state.bootstrap.config) || {};
+      $('formBtn').href = cfg.Form_Published_URL || '#';
+      $('xlsxBtn').href = cfg.Export_XLSX_URL || '#';
+      $('pdfBtn').href = cfg.Export_PDF_URL || '#';
+    }
+
+    function fmt(num){ return `${Number(num || 0).toFixed(1)} mm`; }
+    function classifyValue(mm){
+      const n = Number(mm || 0);
+      if(n <= 5) return {name:'Ligera', cls:'ligera', level:25};
+      if(n <= 20) return {name:'Moderada', cls:'moderada', level:62};
+      return {name:'Fuerte', cls:'fuerte', level:100};
+    }
+    function escapeHtml(str){
+      return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function renderAll(){
+      renderHeaderMetrics();
+      renderKpis();
+      renderTable();
+      drawCompareChart();
+      drawSedeChart();
+      drawTrend();
+      drawMonthly();
+    }
+
+    function filteredRegistros(){
+      const regs = (state.bootstrap && state.bootstrap.registros) || [];
+      if(state.sede === 'TODAS') return regs;
+      return regs.filter(r => String(r.Sede || '') === state.sede);
+    }
+
+    function renderHeaderMetrics(){
+      const regs = filteredRegistros();
+      const total = regs.reduce((a,b)=>a+Number(b.Precipitacion_mm||0),0);
+      const avg = regs.length ? total/regs.length : 0;
+      const today = new Date().toISOString().slice(0,10);
+      const todayRain = regs.filter(r => String(r.Fecha||'') === today).reduce((a,b)=>a+Number(b.Precipitacion_mm||0),0);
+
+      $('todayRain').textContent = fmt(todayRain);
+      $('totalRainHero').textContent = fmt(total);
+      $('avgRainHero').textContent = fmt(avg);
+      $('todayDateText').textContent = 'Filtro actual: ' + state.sede;
+
+      const latest = regs[0];
+      if(latest){
+        const c = classifyValue(latest.Precipitacion_mm || 0);
+        $('intensityNow').textContent = `${c.name} · ${fmt(latest.Precipitacion_mm || 0)}`;
+        $('intensityBar').style.width = `${c.level}%`;
+      } else {
+        $('intensityNow').textContent = 'Sin dato';
+        $('intensityBar').style.width = '0%';
+      }
+    }
+
+    function renderKpis(){
+      const regs = filteredRegistros();
+      const total = regs.length;
+      const totalRain = regs.reduce((a,b)=>a+Number(b.Precipitacion_mm||0),0);
+      const max = regs.reduce((a,b)=>Math.max(a,Number(b.Precipitacion_mm||0)),0);
+      const strongDays = regs.filter(r => Number(r.Precipitacion_mm||0) > 20).length;
+
+      const byDate = groupBy(regs, r => String(r.Fecha || ''));
+      const sortedDates = Object.keys(byDate).sort();
+      const lastDate = sortedDates[sortedDates.length-1];
+      const prevDate = sortedDates[sortedDates.length-2];
+      const dayCurr = sumRain(byDate[lastDate] || []);
+      const dayPrev = sumRain(byDate[prevDate] || []);
+
+      const byWeek = groupBy(regs, r => String(r.SemanaISO || ''));
+      const sortedWeeks = Object.keys(byWeek).sort((a,b)=>Number(a)-Number(b));
+      const lastWeek = sortedWeeks[sortedWeeks.length-1];
+      const prevWeek = sortedWeeks[sortedWeeks.length-2];
+      const weekCurr = sumRain(byWeek[lastWeek] || []);
+      const weekPrev = sumRain(byWeek[prevWeek] || []);
+
+      const byMonth = groupBy(regs, r => String(r.MesClave || ''));
+      const sortedMonths = Object.keys(byMonth).sort();
+      const lastMonth = sortedMonths[sortedMonths.length-1];
+      const prevMonth = sortedMonths[sortedMonths.length-2];
+      const monthCurr = sumRain(byMonth[lastMonth] || []);
+      const monthPrev = sumRain(byMonth[prevMonth] || []);
+
+      const byYear = groupBy(regs, r => String(r.Ano || ''));
+      const sortedYears = Object.keys(byYear).sort();
+      const lastYear = sortedYears[sortedYears.length-1];
+      const prevYear = sortedYears[sortedYears.length-2];
+      const yearCurr = sumRain(byYear[lastYear] || []);
+      const yearPrev = sumRain(byYear[prevYear] || []);
+
+      const cards = [
+        ['Registros almacenados', total],
+        ['Máximo registrado', fmt(max)],
+        ['Total histórico', fmt(totalRain)],
+        ['Días con lluvia fuerte', strongDays],
+        ['Día vs día', `${fmt(dayCurr)} / ${fmt(dayPrev)}`],
+        ['Semana vs semana', `${fmt(weekCurr)} / ${fmt(weekPrev)}`],
+        ['Mes vs mes', `${fmt(monthCurr)} / ${fmt(monthPrev)}`],
+        ['Año vs año', `${fmt(yearCurr)} / ${fmt(yearPrev)}`]
+      ];
+      $('kpiCards').innerHTML = cards.map(([k,v]) => `<div class="small-card"><div class="k">${escapeHtml(String(k))}</div><div class="v">${escapeHtml(String(v))}</div></div>`).join('');
+    }
+
+    function renderTable(){
+      const rows = filteredRegistros();
+      if(!rows.length){
+        $('tableBody').innerHTML = '<tr><td colspan="6" class="loader">No hay registros para el filtro seleccionado.</td></tr>';
+        return;
+      }
+      $('tableBody').innerHTML = rows.slice(0,50).map(r => {
+        const mm = Number(r.Precipitacion_mm || 0);
+        const c = classifyValue(mm);
+        return `<tr>
+          <td>${escapeHtml(r.Fecha || '')}</td>
+          <td>${escapeHtml(r.Sede || '')}</td>
+          <td>${escapeHtml(r.Hora || '')}</td>
+          <td>${fmt(mm)}</td>
+          <td><span class="tag ${c.cls}">${c.name}</span></td>
+          <td>${escapeHtml(r.Observador || '-')}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function drawAxes(ctx, w, h, pad, maxY, yTicks){
+      ctx.strokeStyle = 'rgba(246,240,222,.12)';
+      ctx.lineWidth = 1;
+      for(let i=0;i<=yTicks;i++){
+        const y = pad.top + ((h - pad.top - pad.bottom) * i / yTicks);
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+      }
+      ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, h - pad.bottom); ctx.lineTo(w - pad.right, h - pad.bottom); ctx.stroke();
+      ctx.fillStyle = 'rgba(246,240,222,.72)';
+      ctx.font = '12px Segoe UI, Arial';
+      ctx.textAlign = 'right';
+      for(let i=0;i<=yTicks;i++){
+        const value = ((maxY)*(yTicks-i)/yTicks).toFixed(0);
+        const y = pad.top + ((h - pad.top - pad.bottom) * i / yTicks);
+        ctx.fillText(value, pad.left - 10, y + 4);
+      }
+    }
+
+    function roundRect(ctx, x, y, w, h, r, fill){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r);
+      ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r);
+      ctx.arcTo(x,y,x+w,y,r);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+    }
+
+    function emptyCanvas(ctx,w,h,msg){
+      ctx.fillStyle = 'rgba(246,240,222,.55)';
+      ctx.font = '16px Segoe UI, Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(msg, w/2, h/2);
+    }
+
+    function drawTrend(){
+      const canvas = $('trendChart'), ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height; ctx.clearRect(0,0,w,h);
+      const recent = filteredRegistros().slice(0,12).reverse();
+      const vals = recent.map(r => Number(r.Precipitacion_mm || 0));
+      const labels = recent.map(r => String(r.Fecha || '').slice(5));
+      const maxY = Math.max(10, ...vals, 5);
+      const pad = {top:20,right:20,bottom:50,left:48};
+      drawAxes(ctx,w,h,pad,maxY,5);
+      if(!recent.length) return emptyCanvas(ctx,w,h,'Sin datos para la tendencia reciente');
+      const innerW = w - pad.left - pad.right, innerH = h - pad.top - pad.bottom;
+      const step = recent.length > 1 ? innerW / (recent.length - 1) : innerW;
+
+      ctx.beginPath();
+      recent.forEach((r,i)=>{
+        const x = pad.left + i * step;
+        const y = pad.top + innerH - (Number(r.Precipitacion_mm || 0) / maxY) * innerH;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.lineTo(pad.left + (recent.length-1)*step, h - pad.bottom);
+      ctx.lineTo(pad.left, h - pad.bottom);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(0,pad.top,0,h-pad.bottom);
+      grad.addColorStop(0,'rgba(212,175,55,.30)');
+      grad.addColorStop(1,'rgba(212,175,55,.04)');
+      ctx.fillStyle = grad; ctx.fill();
+
+      ctx.beginPath();
+      recent.forEach((r,i)=>{
+        const x = pad.left + i * step;
+        const y = pad.top + innerH - (Number(r.Precipitacion_mm || 0) / maxY) * innerH;
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.strokeStyle = BRAND.gold; ctx.lineWidth = 3; ctx.stroke();
+
+      recent.forEach((r,i)=>{
+        const x = pad.left + i * step;
+        const y = pad.top + innerH - (Number(r.Precipitacion_mm || 0) / maxY) * innerH;
+        const c = classifyValue(r.Precipitacion_mm || 0);
+        ctx.beginPath(); ctx.arc(x,y,4.5,0,Math.PI*2);
+        ctx.fillStyle = c.level === 25 ? BRAND.ok : c.level === 62 ? BRAND.warn : BRAND.danger;
+        ctx.fill();
+      });
+
+      ctx.fillStyle = 'rgba(246,240,222,.72)';
+      ctx.font = '12px Segoe UI, Arial';
+      ctx.textAlign = 'center';
+      labels.forEach((lab,i)=>ctx.fillText(lab, pad.left + i * step, h - 18));
+    }
+
+    function drawMonthly(){
+      const canvas = $('monthChart'), ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height; ctx.clearRect(0,0,w,h);
+      const grouped = groupBy(filteredRegistros(), r => String(r.MesClave || ''));
+      const entries = Object.entries(grouped).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6);
+      const values = entries.map(([k,v]) => sumRain(v));
+      const labels = entries.map(([k]) => k);
+      const maxY = Math.max(10, ...values, 5);
+      const pad = {top:18,right:18,bottom:44,left:42};
+      drawAxes(ctx,w,h,pad,maxY,5);
+      if(!entries.length) return emptyCanvas(ctx,w,h,'Sin acumulados mensuales');
+      const innerW = w - pad.left - pad.right, innerH = h - pad.top - pad.bottom;
+      const barW = Math.min(46, innerW / entries.length * .56);
+      entries.forEach((e,i)=>{
+        const x = pad.left + ((i + .5) * innerW / entries.length) - barW/2;
+        const val = values[i];
+        const bh = (val / maxY) * innerH;
+        const y = pad.top + innerH - bh;
+        const grad = ctx.createLinearGradient(0,y,0,y+bh);
+        grad.addColorStop(0,'rgba(212,175,55,.95)');
+        grad.addColorStop(1,'rgba(0,102,54,.75)');
+        roundRect(ctx, x, y, barW, bh, 10, grad);
+        ctx.fillStyle = 'rgba(246,240,222,.75)';
+        ctx.font = '12px Segoe UI, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(val.toFixed(0), x + barW/2, y - 8);
+        ctx.fillText(labels[i].slice(5), x + barW/2, h - 18);
+      });
+    }
+
+    function drawCompareChart(){
+      const canvas = $('compareChart'), ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height; ctx.clearRect(0,0,w,h);
+      const regs = filteredRegistros();
+
+      const byDate = groupBy(regs, r => String(r.Fecha || ''));
+      const dates = Object.keys(byDate).sort();
+      const day = [sumRain(byDate[dates[dates.length-1]] || []), sumRain(byDate[dates[dates.length-2]] || [])];
+
+      const byWeek = groupBy(regs, r => String(r.SemanaISO || ''));
+      const weeks = Object.keys(byWeek).sort((a,b)=>Number(a)-Number(b));
+      const week = [sumRain(byWeek[weeks[weeks.length-1]] || []), sumRain(byWeek[weeks[weeks.length-2]] || [])];
+
+      const byMonth = groupBy(regs, r => String(r.MesClave || ''));
+      const months = Object.keys(byMonth).sort();
+      const month = [sumRain(byMonth[months[months.length-1]] || []), sumRain(byMonth[months[months.length-2]] || [])];
+
+      const byYear = groupBy(regs, r => String(r.Ano || ''));
+      const years = Object.keys(byYear).sort();
+      const year = [sumRain(byYear[years[years.length-1]] || []), sumRain(byYear[years[years.length-2]] || [])];
+
+      const labels = ['Día actual','Día previo','Semana actual','Semana previa','Mes actual','Mes previo','Año actual','Año previo'];
+      const values = [day[0],day[1],week[0],week[1],month[0],month[1],year[0],year[1]];
+      const maxY = Math.max(10, ...values, 5);
+      const pad = {top:18,right:18,bottom:58,left:42};
+      drawAxes(ctx,w,h,pad,maxY,5);
+      if(!values.some(v=>v>0)) return emptyCanvas(ctx,w,h,'Aún no hay suficientes datos comparativos');
+
+      const innerW = w - pad.left - pad.right, innerH = h - pad.top - pad.bottom;
+      const barW = Math.min(54, innerW / values.length * .62);
+
+      values.forEach((val,i)=>{
+        const x = pad.left + ((i + .5) * innerW / values.length) - barW/2;
+        const bh = (val / maxY) * innerH;
+        const y = pad.top + innerH - bh;
+        const fill = i % 2 === 0 ? BRAND.gold : BRAND.red;
+        roundRect(ctx,x,y,barW,bh,8,fill);
+        ctx.fillStyle = 'rgba(246,240,222,.8)';
+        ctx.font = '11px Segoe UI, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(val.toFixed(0), x+barW/2, y-6);
+        ctx.save();
+        ctx.translate(x+barW/2, h-10);
+        ctx.rotate(-0.45);
+        ctx.fillText(labels[i], 0, 0);
+        ctx.restore();
+      });
+    }
+
+    function drawSedeChart(){
+      const canvas = $('sedeChart'), ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height; ctx.clearRect(0,0,w,h);
+      const regs = (state.bootstrap && state.bootstrap.registros) || [];
+      const grouped = groupBy(regs, r => String(r.Sede || ''));
+      const labels = ['Manuel J. Betancur','Gustavo Rodas Isaza'];
+      const values = labels.map(s => sumRain(grouped[s] || []));
+      const maxY = Math.max(10, ...values, 5);
+      const pad = {top:18,right:18,bottom:44,left:42};
+      drawAxes(ctx,w,h,pad,maxY,5);
+      if(!values.some(v=>v>0)) return emptyCanvas(ctx,w,h,'Aún no hay datos por sede');
+
+      const innerW = w - pad.left - pad.right, innerH = h - pad.top - pad.bottom;
+      const barW = 90;
+      values.forEach((val,i)=>{
+        const x = pad.left + ((i + .5) * innerW / values.length) - barW/2;
+        const bh = (val / maxY) * innerH;
+        const y = pad.top + innerH - bh;
+        roundRect(ctx, x, y, barW, bh, 10, i===0 ? BRAND.green : BRAND.red);
+        ctx.fillStyle = 'rgba(246,240,222,.8)';
+        ctx.font = '12px Segoe UI, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(val.toFixed(1), x + barW/2, y - 8);
+        ctx.fillText(i===0 ? 'Manuel J.B.' : 'Gustavo R.I.', x + barW/2, h - 18);
+      });
+    }
+
+    function groupBy(arr, keyFn){
+      return arr.reduce((acc,item)=>{
+        const key = keyFn(item);
+        if(!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+      },{});
+    }
+    function sumRain(arr){ return arr.reduce((a,b)=>a+Number(b.Precipitacion_mm||0),0); }
+
+    $('refreshBtn').addEventListener('click', loadBootstrap);
+    $('saveApiBtn').addEventListener('click', () => {
+      state.apiUrl = normalizeApiUrl($('apiUrlInput').value);
+      saveApiUrl(state.apiUrl);
+      setStatus('URL guardada. Actualizando panel…');
+      loadBootstrap();
+    });
+    $('testApiBtn').addEventListener('click', async () => {
+      const url = normalizeApiUrl($('apiUrlInput').value);
+      try {
+        const res = await jsonp(url + '?action=ping');
+        setStatus(res && res.ok ? 'Prueba correcta: backend activo.' : 'El backend respondió, pero no en el formato esperado.');
+      } catch(err) {
+        setStatus('No fue posible conectar con el backend.');
+      }
+    });
+    $('sedeSelect').addEventListener('change', () => {
+      state.sede = $('sedeSelect').value;
+      loadBootstrap();
+    });
+    $('sedeCompareSelect').addEventListener('change', () => {
+      state.sedeComparar = $('sedeCompareSelect').value;
+      drawSedeChart();
+    });
+
+    createRain();
+    $('apiUrlInput').value = getSavedApiUrl();
+    state.apiUrl = $('apiUrlInput').value;
+    loadBootstrap();
+  </script>
+</body>
+</html>
