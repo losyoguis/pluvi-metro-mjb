@@ -26,6 +26,7 @@
     .logo{width:95px;height:115px;border-radius:18px;background:rgba(246,240,222,.08);display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid var(--line)}
     .logo img{max-width:100%;max-height:100%}
     .eyebrow{display:inline-flex;padding:8px 12px;border-radius:999px;border:1px solid var(--line);color:#efe1a6;font-weight:800;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+    .project-meta{margin-top:12px;color:var(--paper);font-weight:650;line-height:1.45;font-size:1rem;background:rgba(246,240,222,.055);border:1px solid var(--line);border-radius:16px;padding:12px 14px;max-width:780px}
     h1{font-size:clamp(2rem,3vw,3.4rem);margin:12px 0 10px;line-height:1.05}
     p{color:var(--muted);font-size:1rem;line-height:1.48}
     .top-status{display:grid;gap:12px}
@@ -82,6 +83,10 @@
             <div class="logo"><img src="assets/escudomjb.png" alt="Escudo MJB" onerror="this.style.display='none'"></div>
             <div>
               <span class="eyebrow">Guardianes Climáticos MJB · Nivel Pro</span>
+              <div class="project-meta">
+                <strong>Proyecto:</strong> Sistema de medición de la huella de carbono educativa de Medellín.<br>
+                <strong>Líder:</strong> Juan Carlos Blandón Vargas.
+              </div>
               <h1>Dashboard pluvial comparativo</h1>
             </div>
           </div>
@@ -114,11 +119,9 @@
         <div class="buttons">
           <button class="primary" id="refreshBtn">Actualizar panel</button>
           <button class="ghost" id="testApiBtn">Probar conexión</button>
-          <a class="btn secondary" id="formBtn" target="_blank" rel="noopener">Abrir Google Form</a>
           <a class="btn ghost" id="xlsxBtn" target="_blank" rel="noopener">Exportar Excel</a>
           <a class="btn ghost" id="pdfBtn" target="_blank" rel="noopener">Exportar PDF</a>
         </div>
-        <p class="help">Sube este archivo como <strong>index.html</strong> en la raíz del repositorio de GitHub Pages.</p>
       </aside>
 
       <section class="dashboard">
@@ -220,7 +223,6 @@ function hydrate() {
   $("sedeSelect").innerHTML = sedes.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join("");
   $("sedeSelect").value = state.sede;
   const cfg = state.data.config || {};
-  $("formBtn").href = cfg.Form_Published_URL || "#";
   $("xlsxBtn").href = cfg.Export_XLSX_URL || "#";
   $("pdfBtn").href = cfg.Export_PDF_URL || "#";
 }
