@@ -139,6 +139,53 @@
       .mobile-actionbar{display:none}
     }
 
+  
+    .marker{cursor:pointer}
+    .marker-tooltip{
+      position:absolute;
+      left:50%;
+      bottom:calc(100% + 14px);
+      transform:translateX(-50%) translateY(8px);
+      min-width:245px;
+      max-width:300px;
+      background:rgba(7,17,11,.96);
+      border:1px solid rgba(212,175,55,.45);
+      box-shadow:0 16px 34px rgba(0,0,0,.38);
+      border-radius:16px;
+      padding:12px 13px;
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+      transition:.18s ease;
+      z-index:20;
+      text-align:left;
+    }
+    .marker:hover .marker-tooltip,
+    .marker:focus-within .marker-tooltip{
+      opacity:1;
+      visibility:visible;
+      transform:translateX(-50%) translateY(0);
+    }
+    .marker-tooltip:after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom:-8px;
+      transform:translateX(-50%) rotate(45deg);
+      width:14px;
+      height:14px;
+      background:rgba(7,17,11,.96);
+      border-right:1px solid rgba(212,175,55,.45);
+      border-bottom:1px solid rgba(212,175,55,.45);
+    }
+    .tooltip-title{font-weight:900;color:#efe1a6;margin-bottom:7px}
+    .tooltip-row{display:flex;justify-content:space-between;gap:10px;border-top:1px solid rgba(246,240,222,.08);padding-top:6px;margin-top:6px;font-size:.86rem}
+    .tooltip-row b{color:#fff}
+    .tooltip-empty{color:var(--muted);font-size:.86rem;line-height:1.35}
+    @media(max-width:820px){
+      .marker-tooltip{min-width:210px;max-width:240px;font-size:.82rem}
+    }
+
   </style>
 </head>
 <body>
@@ -221,8 +268,8 @@
           <div class="chart-head"><h3>Mapa contextual de San Antonio de Prado</h3><span class="mini">Referencia pedagógica</span></div>
           <div class="map">
             <div class="shape"></div>
-            <div class="marker" style="left:58%;top:34%"><div class="pin"></div><span>Manuel J. Betancur</span></div>
-            <div class="marker" style="left:43%;top:62%"><div class="pin"></div><span>Gustavo Rodas Isaza</span></div>
+            <div class="marker" id="markerManuel" style="left:58%;top:34%" tabindex="0"><div class="pin"></div><span>Manuel J. Betancur</span><div class="marker-tooltip" id="tooltipManuel"><div class="tooltip-empty">Cargando último dato...</div></div></div>
+            <div class="marker" id="markerGustavo" style="left:43%;top:62%" tabindex="0"><div class="pin"></div><span>Gustavo Rodas Isaza</span><div class="marker-tooltip" id="tooltipGustavo"><div class="tooltip-empty">Cargando último dato...</div></div></div>
           </div>
         </div>
 
@@ -319,6 +366,50 @@ function intensity(mm) {
   if(x<=20) return {name:"Moderada", cls:"moderada", level:62, alert:"warn"};
   return {name:"Fuerte", cls:"fuerte", level:100, alert:"danger"};
 }
+
+function updateMapTooltips(){
+  const all = allRegs();
+  const sedes = [
+    {nombre:"Manuel J. Betancur", id:"tooltipManuel"},
+    {nombre:"Gustavo Rodas Isaza", id:"tooltipGustavo"}
+  ];
+
+  sedes.forEach(sedeInfo => {
+    const el = $(sedeInfo.id);
+    if(!el) return;
+
+    const datosSede = all
+      .filter(x => String(x.Sede || "").trim() === sedeInfo.nombre)
+      .sort((a,b) => {
+        const da = dateKey(a.Fecha) + " " + normalizeHour(a.Hora || "");
+        const db = dateKey(b.Fecha) + " " + normalizeHour(b.Hora || "");
+        return db.localeCompare(da);
+      });
+
+    if(!datosSede.length){
+      el.innerHTML = `<div class="tooltip-title">${esc(sedeInfo.nombre)}</div><div class="tooltip-empty">Sin registros disponibles para esta sede.</div>`;
+      return;
+    }
+
+    const ultimo = datosSede[0];
+    const fechaUltima = dateKey(ultimo.Fecha);
+    const registrosDia = datosSede.filter(x => dateKey(x.Fecha) === fechaUltima);
+    const acumuladoDia = registrosDia.reduce((acc,x)=>acc+n(x.Precipitacion_mm),0);
+    const it = intensity(ultimo.Precipitacion_mm);
+
+    el.innerHTML = `
+      <div class="tooltip-title">${esc(sedeInfo.nombre)}</div>
+      <div class="tooltip-row"><span>Última fecha</span><b>${esc(fechaUltima)}</b></div>
+      <div class="tooltip-row"><span>Hora</span><b>${esc(normalizeHour(ultimo.Hora || ""))}</b></div>
+      <div class="tooltip-row"><span>Último dato</span><b>${fmt(ultimo.Precipitacion_mm)}</b></div>
+      <div class="tooltip-row"><span>Acumulado del día</span><b>${fmt(acumuladoDia)}</b></div>
+      <div class="tooltip-row"><span>Intensidad</span><b>${esc(it.name)}</b></div>
+      <div class="tooltip-row"><span>Observador</span><b>${esc(ultimo.Observador || "-")}</b></div>
+      <div class="tooltip-row"><span>Condición</span><b>${esc(ultimo.Condicion || "-")}</b></div>
+    `;
+  });
+}
+
 function render() {
   const r = regs();
   const total = r.reduce((a,b)=>a+n(b.Precipitacion_mm),0);
@@ -368,6 +459,7 @@ function render() {
   drawSede();
   drawTrend();
   drawMonthly();
+  updateMapTooltips();
 }
 
 function normalizeHour(v){
