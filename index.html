@@ -71,6 +71,16 @@
     .footer{color:var(--muted);text-align:center;margin-top:26px;font-size:.9rem}
     @media(max-width:1120px){.hero-grid,.main,.charts,.grid2{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:760px){.cards{grid-template-columns:1fr}.brand{align-items:flex-start}.logo{width:74px;height:90px}}
+  
+    .table-wrap table{table-layout:fixed}
+    .table-wrap th:nth-child(1),.table-wrap td:nth-child(1){width:130px}
+    .table-wrap th:nth-child(2),.table-wrap td:nth-child(2){width:190px}
+    .table-wrap th:nth-child(3),.table-wrap td:nth-child(3){width:115px;white-space:nowrap}
+    .table-wrap th:nth-child(4),.table-wrap td:nth-child(4){width:155px;white-space:nowrap}
+    .table-wrap th:nth-child(5),.table-wrap td:nth-child(5){width:155px}
+    .table-wrap th:nth-child(6),.table-wrap td:nth-child(6){width:145px}
+    .table-wrap th:nth-child(7),.table-wrap td:nth-child(7){width:180px}
+
   </style>
 </head>
 <body>
@@ -285,7 +295,7 @@ function render() {
 
   $("tableBody").innerHTML = r.length ? r.slice(0,60).map(x=> {
     const it=intensity(x.Precipitacion_mm);
-    return `<tr><td>${esc(dateKey(x.Fecha))}</td><td>${esc(x.Sede||"")}</td><td>${esc(String(x.Hora||"").slice(0,5))}</td><td>${fmt(x.Precipitacion_mm)}</td><td><span class="tag ${it.cls}">${it.name}</span></td><td>${esc(x.Observador||"-")}</td><td>${esc(x.Condicion||"-")}</td></tr>`;
+    return `<tr><td>${esc(dateKey(x.Fecha))}</td><td>${esc(x.Sede||"")}</td><td>${esc(normalizeHour(x.Hora || ""))}</td><td>${fmt(x.Precipitacion_mm)}</td><td><span class="tag ${it.cls}">${it.name}</span></td><td>${esc(x.Observador||"-")}</td><td>${esc(x.Condicion||"-")}</td></tr>`;
   }).join("") : `<tr><td colspan="7">No hay registros para este filtro.</td></tr>`;
 
   drawCompare();
