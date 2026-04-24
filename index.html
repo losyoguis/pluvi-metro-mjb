@@ -72,6 +72,11 @@
     .marker span{white-space:nowrap;background:rgba(7,17,11,.92);border:1px solid var(--line);padding:6px 8px;border-radius:10px;font-size:.8rem}
     .help{font-size:.85rem;color:var(--muted);margin-top:8px}
     .footer{color:var(--muted);text-align:center;margin-top:26px;font-size:.9rem}
+    .yoguis-footer{margin-top:28px;border:1px solid var(--line);background:#000;border-radius:24px;box-shadow:var(--shadow);overflow:hidden;text-align:center}
+    .yoguis-footer img{display:block;width:100%;height:auto;max-height:360px;object-fit:contain;background:#000}
+    .yoguis-footer-link{display:flex;justify-content:center;align-items:center;padding:14px 16px 18px;background:#000;border-top:1px solid rgba(246,240,222,.08)}
+    .yoguis-footer-link a{color:#ffef3c;text-decoration:none;font-weight:950;letter-spacing:.02em;font-size:1rem}
+    .yoguis-footer-link a:hover{text-decoration:underline}
     @media(max-width:1120px){.hero-grid,.main,.charts,.grid2{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:760px){.cards{grid-template-columns:1fr}.brand{align-items:flex-start}.logo{width:74px;height:90px}}
   
@@ -124,6 +129,10 @@
       table{min-width:720px}
       th,td{padding:10px 11px;font-size:.82rem}
       .footer{font-size:.78rem;padding:0 12px}
+      .yoguis-footer{margin:18px 10px 0;border-radius:20px}
+      .yoguis-footer img{max-height:none}
+      .yoguis-footer-link{padding:12px 12px 15px}
+      .yoguis-footer-link a{font-size:.92rem}
       .mobile-actionbar{
         position:fixed;left:0;right:0;bottom:0;z-index:60;
         display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
@@ -292,6 +301,12 @@
         </div>
       </section>
     </section>
+    <footer class="yoguis-footer" aria-label="Footer Los Yoguis">
+      <img src="assets/footer_losyoguis.png" alt="Los Yoguis - 15 años aportando a la transformación educativa, cultural y ambiental" loading="lazy">
+      <div class="yoguis-footer-link">
+        <a href="https://www.losyoguis.com" target="_blank" rel="noopener">www.losyoguis.com</a>
+      </div>
+    </footer>
     <div class="footer">Guardianes Climáticos MJB · Dashboard escolar de monitoreo pluvial</div>
   </main>
 
