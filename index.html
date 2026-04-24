@@ -126,7 +126,7 @@
       .footer{font-size:.78rem;padding:0 12px}
       .mobile-actionbar{
         position:fixed;left:0;right:0;bottom:0;z-index:60;
-        display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+        display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
         padding:10px 10px calc(10px + env(safe-area-inset-bottom));
         background:rgba(6,17,10,.94);backdrop-filter:blur(12px);
         border-top:1px solid rgba(246,240,222,.12)
@@ -237,7 +237,7 @@
         <input id="dateFilter" type="date">
         <div class="help" id="lastUpdated">Última actualización: —</div>
         <label for="apiUrlInput">Backend Apps Script</label>
-        <input id="apiUrlInput" value="https://script.google.com/macros/s/AKfycbxd4oxA275xr8vY3Wp1XazyUE-b53xo86kI1Ta5FcgJGTMwiZb-fF-Y0ogut4GA2A/exec">
+        <input id="apiUrlInput" value="https://script.google.com/macros/s/AKfycbyJTp9BFuZuOSbIUYlV3r4i54jPYFGRbAkHkTb8UYynhw0S8ZqCBbgUxh0bMtBD4g/exec">
         <div class="buttons">
           <button class="primary" id="refreshBtn">Actualizar panel</button>
           <button class="ghost" id="clearFiltersBtn">Limpiar filtros</button>
@@ -245,6 +245,8 @@
           <a class="btn ghost" id="xlsxBtn" target="_blank" rel="noopener">Descargar Excel</a>
           <a class="btn ghost" id="pdfBtn" target="_blank" rel="noopener">Descargar PDF</a>
           <a class="btn primary" id="ingresoDatosBtn" href="https://sites.google.com/iemanueljbetancur.edu.co/pluviometromjb/inicio" target="_blank" rel="noopener">Ingreso de datos</a>
+          <a class="btn secondary" id="simeco2Btn" href="https://losyoguis.github.io/huelladecarbonoeducativademedellin/" target="_blank" rel="noopener">SiMeCO2</a>
+          <a class="btn primary" id="guardianesBtn" href="https://losyoguis.github.io/guardianes-climaticos/#home" target="_blank" rel="noopener">Guardianes Climáticos</a>
         </div>
       </aside>
 
@@ -298,6 +300,8 @@
     <a class="btn ghost" id="mobileXlsxBtn" target="_blank" rel="noopener">Excel</a>
     <a class="btn ghost" id="mobilePdfBtn" target="_blank" rel="noopener">PDF</a>
     <a class="btn primary" id="mobileIngresoBtn" href="https://sites.google.com/iemanueljbetancur.edu.co/pluviometromjb/inicio" target="_blank" rel="noopener">Ingreso</a>
+    <a class="btn secondary" id="mobileSimeco2Btn" href="https://losyoguis.github.io/huelladecarbonoeducativademedellin/" target="_blank" rel="noopener">SiMeCO2</a>
+    <a class="btn primary" id="mobileGuardianesBtn" href="https://losyoguis.github.io/guardianes-climaticos/#home" target="_blank" rel="noopener">Guardianes</a>
   </div>
 
 <script>
